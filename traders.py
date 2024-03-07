@@ -14,16 +14,17 @@ class Trader:
             return random.uniform(0, 100)
 
 class Market:
-    def __init__(self, num_traders, num_rounds):
-        self.traders = [Trader(i, 'ZI-U' if i < num_traders // 2 else 'ZI-C') for i in range(num_traders)]
+    def __init__(self, num_sellers, num_buyers, num_rounds, trader_type):
+        self.sellers = [Trader(i, trader_type) for i in range(num_sellers)]
+        self.buyers = [Trader(i, trader_type) for i in range(num_buyers, num_buyers + num_sellers)]
         self.bids_ZI_U = []
         self.bids_ZI_C = []
         self.run_market(num_rounds)
 
     def run_market(self, num_rounds):
         for _ in range(num_rounds):
-            bids_ZI_U = [trader.make_bid() for trader in self.traders if trader.type == 'ZI-U']
-            bids_ZI_C = [trader.make_bid() for trader in self.traders if trader.type == 'ZI-C']
+            bids_ZI_U = [trader.make_bid() for trader in self.sellers]
+            bids_ZI_C = [trader.make_bid() for trader in self.buyers]
             self.bids_ZI_U.extend(bids_ZI_U)
             self.bids_ZI_C.extend(bids_ZI_C)
 
@@ -31,15 +32,15 @@ class Market:
         plt.figure(figsize=(12, 6))
 
         plt.subplot(1, 2, 1)
-        plt.hist(self.bids_ZI_U, bins=20, alpha=0.5, label='ZI-U')
-        plt.title('Distribution des offres des traders ZI-U')
+        plt.hist(self.bids_ZI_U, bins=20, alpha=0.5, label='Vendeurs')
+        plt.title('Distribution des offres des vendeurs')
         plt.xlabel('Offre')
         plt.ylabel('Fréquence')
         plt.legend()
 
         plt.subplot(1, 2, 2)
-        plt.hist(self.bids_ZI_C, bins=20, alpha=0.5, label='ZI-C')
-        plt.title('Distribution des offres des traders ZI-C')
+        plt.hist(self.bids_ZI_C, bins=20, alpha=0.5, label='Acheteurs')
+        plt.title('Distribution des offres des acheteurs')
         plt.xlabel('Offre')
         plt.ylabel('Fréquence')
         plt.legend()
@@ -47,5 +48,7 @@ class Market:
         plt.tight_layout()
         plt.show()
 
-market = Market(10, 50)
+trader_type = input("Entrez 0 pour les traders ZI-H et 1 pour les traders ZI-C: ")
+trader_type = 'ZI-U' if trader_type == '0' else 'ZI-C'
+market = Market(10, 10, 50, trader_type)  # 10 vendeurs, 10 acheteurs, 50 tours
 market.plot_results()
