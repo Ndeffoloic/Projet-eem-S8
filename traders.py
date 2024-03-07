@@ -16,32 +16,33 @@ class Trader:
 class Market:
     def __init__(self, num_traders, num_rounds):
         self.traders = [Trader(i, 'ZI-U' if i < num_traders // 2 else 'ZI-C') for i in range(num_traders)]
-        self.equilibrium_prices = []
-        self.total_surplus = []
+        self.bids_ZI_U = []
+        self.bids_ZI_C = []
         self.run_market(num_rounds)
 
     def run_market(self, num_rounds):
         for _ in range(num_rounds):
-            bids = [trader.make_bid() for trader in self.traders]
-            bids.sort()
-            equilibrium_price = bids[len(bids)//2]
-            self.equilibrium_prices.append(equilibrium_price)
-            self.total_surplus.append(sum(bid for bid in bids if bid <= equilibrium_price))
+            bids_ZI_U = [trader.make_bid() for trader in self.traders if trader.type == 'ZI-U']
+            bids_ZI_C = [trader.make_bid() for trader in self.traders if trader.type == 'ZI-C']
+            self.bids_ZI_U.extend(bids_ZI_U)
+            self.bids_ZI_C.extend(bids_ZI_C)
 
     def plot_results(self):
         plt.figure(figsize=(12, 6))
 
         plt.subplot(1, 2, 1)
-        plt.plot(self.equilibrium_prices)
-        plt.title('Prix d\'équilibre au fil du temps')
-        plt.xlabel('Tour d\'enchère')
-        plt.ylabel('Prix d\'équilibre')
+        plt.hist(self.bids_ZI_U, bins=20, alpha=0.5, label='ZI-U')
+        plt.title('Distribution des offres des traders ZI-U')
+        plt.xlabel('Offre')
+        plt.ylabel('Fréquence')
+        plt.legend()
 
         plt.subplot(1, 2, 2)
-        plt.plot(self.total_surplus)
-        plt.title('Surplus total extrait au fil du temps')
-        plt.xlabel('Tour d\'enchère')
-        plt.ylabel('Surplus total extrait')
+        plt.hist(self.bids_ZI_C, bins=20, alpha=0.5, label='ZI-C')
+        plt.title('Distribution des offres des traders ZI-C')
+        plt.xlabel('Offre')
+        plt.ylabel('Fréquence')
+        plt.legend()
 
         plt.tight_layout()
         plt.show()
