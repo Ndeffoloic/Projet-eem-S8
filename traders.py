@@ -1,5 +1,8 @@
 import random
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class Trader:
     def __init__(self, id, type):
@@ -35,9 +38,24 @@ class Market:
     def plot_results(self):
         plt.figure(figsize=(12, 6))
 
+        # Create the x values for the step function
+        x1 = np.linspace(0, 100, 100)
+        y1 = np.linspace(50, 150, 100)
+
+        # Create the x values for the horizontal line
+        x2 = np.linspace(100, 200, 100)
+        y2 = np.full_like(x2, 150)
+
+        # Plot the step function
         plt.subplot(1, 2, 1)
-        plt.hist(self.bids_ZI_U, bins=20, alpha=0.5, label='Offre')
-        plt.hist(self.bids_ZI_C, bins=20, alpha=0.5, label='Demande')
+        plt.plot(x1, y1, label='Step function')
+
+        # Plot the horizontal line
+        plt.plot(x2, y2, label='Horizontal line')
+
+        # Add a vertical dashed line
+        plt.vlines(x=100, ymin=50, ymax=150, colors='black', linestyles='dashed')
+
         plt.title('Fonctions d\'offre et de demande')
         plt.xlabel('Prix')
         plt.ylabel('Fréquence')
