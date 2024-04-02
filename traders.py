@@ -1,7 +1,6 @@
 import random
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Trader:
@@ -38,34 +37,16 @@ class Market:
     def plot_results(self):
         plt.figure(figsize=(12, 6))
 
-        # Create the x values for the step function
-        x1 = np.linspace(0, 100, 100)
-        y1 = np.linspace(50, 150, 100)
+        # Plot the seller's price
+        plt.bar(range(len(self.bids_ZI_U)), self.bids_ZI_U, color='g', label='Prix du vendeur')
 
-        # Create the x values for the horizontal line
-        x2 = np.linspace(100, 200, 100)
-        y2 = np.full_like(x2, 150)
+        # Plot the buyer's price
+        plt.bar(range(len(self.bids_ZI_C)), self.bids_ZI_C, color='b', label='Prix de l\'acheteur')
 
-        # Plot the step function
-        plt.subplot(1, 2, 1)
-        plt.plot(x1, y1, label='Step function')
-
-        # Plot the horizontal line
-        plt.plot(x2, y2, label='Horizontal line')
-
-        # Add a vertical dashed line
-        plt.vlines(x=100, ymin=50, ymax=150, colors='black', linestyles='dashed')
-
-        plt.title('Fonctions d\'offre et de demande')
-        plt.xlabel('Prix')
-        plt.ylabel('Fréquence')
+        plt.title('Prix du vendeur et de l\'acheteur à chaque itération')
+        plt.xlabel('Itération')
+        plt.ylabel('Prix')
         plt.legend()
-
-        plt.subplot(1, 2, 2)
-        plt.plot(self.transaction_prices)
-        plt.title('Séries chronologiques de prix de transaction')
-        plt.xlabel('Temps')
-        plt.ylabel('Prix de transaction')
 
         plt.tight_layout()
         plt.show()
