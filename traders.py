@@ -38,14 +38,14 @@ class Market:
         plt.figure(figsize=(12, 6))
 
         # Plot the seller's price
-        plt.bar(range(len(self.bids_ZI_U)), self.bids_ZI_U, color='g', label='Prix du vendeur')
+        plt.hlines(y=range(len(self.bids_ZI_U)), xmin=0, xmax=self.bids_ZI_U, color='g', label='Prix du vendeur')
 
         # Plot the buyer's price
-        plt.bar(range(len(self.bids_ZI_C)), self.bids_ZI_C, color='b', label='Prix de l\'acheteur')
+        plt.hlines(y=range(len(self.bids_ZI_C)), xmin=0, xmax=self.bids_ZI_C, color='b', label='Prix de l\'acheteur')
 
         plt.title('Prix du vendeur et de l\'acheteur à chaque itération')
-        plt.xlabel('Itération')
-        plt.ylabel('Prix')
+        plt.xlabel('Prix')
+        plt.ylabel('Itération')
         plt.legend()
 
         plt.tight_layout()
