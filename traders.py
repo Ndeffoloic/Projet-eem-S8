@@ -1,6 +1,7 @@
 import random
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # Define the ZI-trader class
@@ -73,8 +74,8 @@ final_demands.sort(reverse=True)
 
 # Plot the supply and demand curves
 plt.figure(figsize=(12, 6))
-plt.plot(final_offers, label='Offre')
-plt.plot(final_demands, label='Demande')
+plt.step(np.arange(len(final_offers)), final_offers, where='post', label='Offre')
+plt.step(np.arange(len(final_demands)), final_demands, where='post', label='Demande')
 plt.xlabel('Trader')
 plt.ylabel('Prix')
 plt.title('Courbes d\'offre et de demande')
@@ -82,7 +83,7 @@ plt.legend()
 
 # Get the transaction prices
 transaction_prices = [t[2] for t in transactions]
-
+c
 # Plot the transaction prices
 plt.figure(figsize=(12, 6))
 plt.plot(transaction_prices)
