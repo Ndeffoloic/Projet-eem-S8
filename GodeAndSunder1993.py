@@ -16,6 +16,7 @@ class ZITrader :
         self.demand = None
         self.trade = False
         self.profit = 0
+        self.ltr = 0 #last_trade_round
         
     def generate_offer_demand(self):
         if self.ZI_type == 'ZI-U' :
@@ -28,6 +29,7 @@ class ZITrader :
             self.cost = random.randint(1,200) if self.type == 'seller' else None
             self.offer = random.randint(1, self.redemption_value) if self.type == 'seller' else None
             self.demand = random.randint(self.cost, 200) if self.type == 'buyer' else None
+        return self.offer if type == 'seller' else None
 
     def accept_offer_demand(self, price):
         if self.ZI_type == 'ZI-U' : 
@@ -45,34 +47,35 @@ trader_type = 'ZI-C' if trader_type_input == 1 else 'ZI-U'
 # Initialize the market with 24 ZI-traders
 traders = [ZITrader(i, 'buyer' if i < 12 else 'seller', trader_type) for i in range(24)]
 
-# Each ZI-trader generates an offer and a demand
-for trader in traders:
-    trader.generate_offer_demand()
-
-# Define the double auction mechanism
 def double_auction(traders,num_rounds):
-    # Sort the sellers by their offer price in ascending order and the buyers by their demand price in descending order
-    sellers = sorted([t for t in traders if t.type == 'seller'], key=lambda t: t.offer)
-    buyers = sorted([t for t in traders if t.type == 'buyer'], key=lambda t: t.demand, reverse=True)
-
     # Initialize the list of transactions
     transactions = []
-    i = 0
-    # While there are still sellers and buyers
-    while len(transactions) < num_rounds:
-        # If the highest demand price is greater than or equal to the lowest offer price
-        if buyers[i%12].trade == False and sellers[i%12].trade == False:
+    transaction_proposals = {i:0 for i in range(24)}
+    for _ in range(num_rounds):
+        # Each ZI-trader generates an offer and a demand
+        for trader in traders:
+            if trader.trade == False :
+                transaction_proposals[traders.index(trader)] = trader.generate_offer_demand()
+
+        # Sort the sellers by their offer price in ascending order and the buyers by their demand price in descending order
+        sellers = sorted([t for t in traders if t.type == 'seller'], key=lambda t: t.offer)
+        buyers = sorted([t for t in traders if t.type == 'buyer'], key=lambda t: t.demand, reverse=True)
+
+        # Try to make a transaction with each pair of buyer and seller
+        for i in range(min(len(buyers), len(sellers))):
+            # If the highest demand price is greater than or equal to the lowest offer price
             # A transaction occurs at the price of the earliest order
-            price = sellers[i%12].offer if sellers[i%12].offer < buyers[i%12].demand else buyers[i%12].demand
-            if sellers[i%12].accept_offer_demand(price) and buyers[i%12].accept_offer_demand(price) :
-                transactions.append((sellers[i%12].id, buyers[i%12].id, price))
-                i +=1    
-        else:
-            # The market clears
-            break
+            if(sellers[i].ltr != buyers[i].ltr) :
+                earliestTrader = sellers[i] if sellers[i].trade == False else earliestTrader 
+            price = earliestTrader.generate_offer_demand()
+            if sellers[i].accept_offer_demand(price) and buyers[i].accept_offer_demand(price) :
+                transactions.append((sellers[i].id, buyers[i].id, price))
+                # Stop after one successful transaction
+                break
 
     # Return the list of transactions
     return transactions
+
 
 # Run the double auction mechanism and print the transactions
 transactions = double_auction(traders,500)
@@ -83,6 +86,9 @@ for transaction in transactions:
 final_offers = [t.offer for t in traders if t.type == 'seller']
 final_demands = [t.demand for t in traders if t.type == 'buyer']
 
+# Sort the offers and demands
+final_offers.sort()
+final_demands.sort(reverse=True)
 
 # Plot the supply and demand curves
 plt.figure(figsize=(12, 6))

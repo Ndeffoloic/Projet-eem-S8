@@ -56,5 +56,5 @@ class Market:
 
 trader_type = input("Entrez 0 pour les traders ZI-H et 1 pour les traders ZI-C: ")
 trader_type = 'ZI-U' if trader_type == '0' else 'ZI-C'
-market = Market(10, 10, 50, trader_type)  # 10 vendeurs, 10 acheteurs, 50 tours
+market = Market(10, 10, 500, trader_type)  # 10 vendeurs, 10 acheteurs, 50 tours
 market.plot_results()
