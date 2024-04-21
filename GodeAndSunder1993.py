@@ -27,6 +27,11 @@ class Market:
                 sellers = sorted([t for t in self.traders if t.type == 'seller' and not t.trade], key=lambda t: t.offer)
                 buyers = sorted([t for t in self.traders if t.type == 'buyer' and not t.trade], key=lambda t: t.demand, reverse=True)
 
+                # Initialize earliestTrader with the first seller who has not yet traded
+                earliestTrader = next((s for s in sellers if not s.trade), None)
+                if earliestTrader is None:
+                    break
+
                 for i in range(min(len(buyers), len(sellers))):
                     if(sellers[i].ltr != buyers[i].ltr) :
                         earliestTrader = sellers[i] if sellers[i].trade == False else earliestTrader 
@@ -35,6 +40,7 @@ class Market:
                         transactions.append((sellers[i].id, buyers[i].id, price))
                         break
         return transactions
+
 
 
 class ZITrader : 
@@ -51,6 +57,8 @@ class ZITrader :
         self.trade = False
         self.profit = 0
         self.ltr = 0 #last_trade_round
+        self.traded_goods = []  
+        self.surplus = []  
         
     def generate_offer_demand(self):
         if self.ZI_type == 'ZI-U' :
@@ -72,6 +80,9 @@ class ZITrader :
         elif self.ZI_type == 'ZI-C' : 
             self.trade = (price < self.redemption_value ) if self.type == 'buyer' else (price > self.cost)
             self.profit = price - self.cost if self.type == 'seller' else self.redemption_value - price
+        if self.trade:
+            self.traded_goods.append(1) 
+            self.surplus.append(self.profit)  
         return self.trade
 
 # Ask the user to enter 1 for ZI-C and 0 for ZI-U
@@ -85,7 +96,7 @@ market_type_input = int(input("Veuillez entrer le type de marché (1 à 5): "))
 market = Market(market_type_input, 24, trader_type)
 
 # Run the double auction mechanism and print the transactions
-transactions = market.simulate(500)
+transactions = market.simulate(12)
 for transaction in transactions:
     print(f"Seller {transaction[0]} and buyer {transaction[1]} made a transaction at price {transaction[2]}.")
 
@@ -119,3 +130,21 @@ plt.title('Prix des transactions')
 # Show the plots
 plt.show()
 print(len(transactions))
+# Print the number of goods traded by each trader
+for i, trader in enumerate(market.traders):
+    print(f"Trader {i} traded {sum(trader.traded_goods)} goods.")
+
+# Print the surplus of each trader
+for i, trader in enumerate(market.traders):
+    print(f"Trader {i} has a surplus of {sum(trader.surplus)}.")
+
+# Plot the surplus of buyers and sellers
+plt.figure(figsize=(12, 6))
+plt.plot([sum(t.surplus) for t in market.traders if t.type == 'buyer'], label='Acheteurs')
+plt.plot([sum(t.surplus) for t in market.traders if t.type == 'seller'], label='Vendeurs')
+plt.xlabel('Période')
+plt.ylabel('Surplus')
+plt.title('Surplus des acheteurs et des vendeurs par période')
+plt.legend()
+plt.show()
+
