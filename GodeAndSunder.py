@@ -86,9 +86,6 @@ def double_auction(traders,num_rounds):
 
 # Run the double auction mechanism and print the transactions
 transactions, equilibrium_prices, avg_offer_prices, avg_demand_prices = double_auction(traders,200)
-for transaction in transactions:
-    print(f"Seller {transaction[0]} and buyer {transaction[1]} made a transaction at price {transaction[2]}.")
-
 # Plot the equilibrium prices
 plt.figure(figsize=(12, 6))
 plt.plot(equilibrium_prices)
