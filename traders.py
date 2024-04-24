@@ -1,60 +1,81 @@
-import random
-
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Trader:
-    def __init__(self, id, type):
+    def __init__(self, id, type, trader_type, trader_limit=0, value=0):
+        self.trader_type = trader_type
+        self.type = type
+        self.trader_limit = 0 if self.trader_type == 'ZI-U' else trader_limit
         self.id = id
-        self.type = type  # 'ZI-U' or 'ZI-C'
-        self.price_limit = random.uniform(0, 500) if self.type == 'ZI-U' else random.uniform(0, 100)
-        self.bid = self.make_bid()
+        self.value = value  # redemption_value for buyers, cost for sellers
+        self.offer = None
+        self.demand = None
+        self.trade = False
+        self.profit = 0
+        self.units = 1 if self.type == 'seller' else 0  # sellers start with 1 unit, buyers with 0
 
     def make_bid(self):
-        if self.type == 'ZI-U':
-            return random.uniform(0, self.price_limit)
-        elif self.type == 'ZI-C':
-            return random.uniform(self.price_limit, 500)
+        if self.trader_type == 'ZI-U':
+            self.offer = np.random.randint(1, 200) if self.type == 'seller' else None
+            self.demand = np.random.randint(1, 200) if self.type == 'buyer' else None
+        elif self.trader_type == 'ZI-C':
+            self.offer = np.random.randint(1, max(2, self.value)) if self.type == 'seller' else None
+            self.demand = np.random.randint(self.value, 200) if self.type == 'buyer' else None
 
-class Market:
-    def __init__(self, num_sellers, num_buyers, num_rounds, trader_type):
-        self.sellers = [Trader(i, trader_type) for i in range(num_sellers)]
-        self.buyers = [Trader(i, trader_type) for i in range(num_buyers, num_buyers + num_sellers)]
-        self.bids_ZI_U = []
-        self.bids_ZI_C = []
-        self.transaction_prices = []
-        self.run_market(num_rounds)
+    def accept_offer_demand(self, price):
+        if self.trader_type == 'ZI-U':
+            self.trade = True
+            self.profit = price - self.value if self.type == 'seller' else self.value - price
+        elif self.trader_type == 'ZI-C':
+            self.trade = (price < self.value) if self.type == 'buyer' else (price > self.value)
+            self.profit = price - self.value if self.type == 'seller' else self.value - price
+        return self.trade
 
-    def run_market(self, num_rounds):
-        for _ in range(num_rounds):
-            bids_ZI_U = [trader.make_bid() for trader in self.sellers]
-            bids_ZI_C = [trader.make_bid() for trader in self.buyers]
-            self.bids_ZI_U.extend(bids_ZI_U)
-            self.bids_ZI_C.extend(bids_ZI_C)
-            transaction_price = (max(bids_ZI_U) + min(bids_ZI_C)) / 2  # prix moyen entre l'offre la plus élevée et la demande la plus basse
-            self.transaction_prices.append(transaction_price)
+# Initialize the market with 20 traders
+A = 200  # buyer's maximum willingness to pay
+V = 0  # seller's minimum acceptable price
+traders = [Trader(i, 'buyer', 'ZI-C', value=A - 7 * i) for i in range(20)] + \
+           [Trader(i + 20, 'seller', 'ZI-C', value=max(2, V + 7 * i)) for i in range(20)]
 
-    def plot_results(self):
-        plt.figure(figsize=(12, 6))
+def double_auction(traders, num_rounds):
+    transactions = []
+    equilibrium_prices = []
+    avg_offer_prices = []
+    avg_demand_prices = []
+    for _ in range(num_rounds):
+        for trader in traders:
+            if trader.units > 0:  # only generate offer/demand if the trader has units left
+                trader.make_bid()
+        sellers = sorted([t for t in traders if t.type == 'seller' and t.units > 0], key=lambda t: t.offer)
+        buyers = sorted([t for t in traders if t.type == 'buyer' and t.units < 1], key=lambda t: t.demand, reverse=True)
+        while sellers and buyers and buyers[0].demand >= sellers[0].offer:
+            price = (sellers[0].offer + buyers[0].demand) / 2  # transaction price is the average of offer and demand
+            if sellers[0].accept_offer_demand(price) and buyers[0].accept_offer_demand(price):
+                transactions.append((sellers[0].id, buyers[0].id, price))
+                sellers[0].units -= 1
+                buyers[0].units += 1
+                sellers.pop(0)
+                buyers.pop(0)
+        equilibrium_prices.append(transactions[-1][2] if transactions else 0)
+        avg_offer_prices.append(np.mean([t.offer for t in traders if t.type == 'seller' and t.units > 0]))
+        avg_demand_prices.append(np.mean([t.demand for t in traders if t.type == 'buyer' and t.units < 1]))
+    return transactions, equilibrium_prices, avg_offer_prices, avg_demand_prices
 
-        plt.subplot(1, 2, 1)
-        plt.hist(self.bids_ZI_U, bins=20, alpha=0.5, label='Offre')
-        plt.hist(self.bids_ZI_C, bins=20, alpha=0.5, label='Demande')
-        plt.title('Fonctions d\'offre et de demande')
-        plt.xlabel('Prix')
-        plt.ylabel('Fréquence')
-        plt.legend()
+transactions, equilibrium_prices, avg_offer_prices, avg_demand_prices = double_auction(traders, 12)
 
-        plt.subplot(1, 2, 2)
-        plt.plot(self.transaction_prices)
-        plt.title('Séries chronologiques de prix de transaction')
-        plt.xlabel('Temps')
-        plt.ylabel('Prix de transaction')
+plt.figure(figsize=(12, 6))
+plt.plot(equilibrium_prices)
+plt.xlabel('Produit')
+plt.ylabel('Prix')
+plt.title('Prix d\'équilibre')
 
-        plt.tight_layout()
-        plt.show()
+plt.figure(figsize=(12, 6))
+plt.plot(avg_offer_prices, label='Offre moyenne')
+plt.plot(avg_demand_prices, label='Demande moyenne')
+plt.xlabel('Produit')
+plt.ylabel('Prix')
+plt.title('Offre et demande moyennes')
+plt.legend()
 
-trader_type = input("Entrez 0 pour les traders ZI-H et 1 pour les traders ZI-C: ")
-trader_type = 'ZI-U' if trader_type == '0' else 'ZI-C'
-market = Market(10, 10, 500, trader_type)  # 10 vendeurs, 10 acheteurs, 50 tours
-market.plot_results()
+plt.show()
