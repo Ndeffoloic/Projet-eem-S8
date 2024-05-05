@@ -5,18 +5,33 @@ import matplotlib.pyplot as plt
 a_Buyer = 147 # A € [133,200]
 v_Seller = 14  # V € [0,67]
 
+a_Buyer = 147 # A € [133,200]
+v_Seller = 14  # V € [0,67]
+
 class Trader:
-    def __init__(self, id,trader_type):
+    def __init__(self, id, trader_type, ZI_C=False):
         self.id = id
         self.trader_type = trader_type
-        # chaque vendeur dispose d'une unité de bien et chaque acheteur dispose de 0 unité
         self.init_qty = 1 if trader_type == "seller" else None
         self.redemption_value = (a_Buyer - 7*self.id) if trader_type == "buyer" else None
         self.cost = (v_Seller + 7*self.id) if trader_type == "seller" else None
         self.sold_quantities = 0  if  trader_type == "seller" else None
         self.bought_quantities = 0 if trader_type == "buyer" else None
         self.has_traded = self.bought_quantities ==1 if trader_type == "buyer" else self.sold_quantities ==1
-        
+        self.ZI_C = ZI_C
+
+    def generate_bid(self):
+        if self.ZI_C:
+            return random.uniform(0, self.redemption_value)
+        else:
+            return random.uniform(0, 200)
+
+    def generate_ask(self):
+        if self.ZI_C:
+            return random.uniform(self.cost, 200)
+        else:
+            return random.uniform(0, 200)
+
 def create_traders():
     buyers = [Trader(i,"buyer") for i in range(20)]
     sellers = [Trader(i,"seller") for i in range(20)]
@@ -38,16 +53,18 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False):
     supply = {} if type_double_auction == 1 else [] # à chaque tuple [quantité,itération] on associera un prix. 
     prices = [] # représente les différents prix auquels ont été vendus les produits à chaque round
 
-    for i in range(20):  # Run for 20 rounds
+    for i in range(20):  
+        # Run for 20 rounds
         buyers = [t for t in traders if t.trader_type ==  "buyer" and not t.has_traded]
         sellers = [t for t in traders if t.trader_type ==  "seller" and not t.has_traded]
         nmr_qty = 0 # nombre d'échanges au cours de ce round
         if not buyers or not sellers:
             break  # No more trades can be made
         if type_double_auction == 1 : 
-            # Sort asks and bids
-            asks = sorted([t.redemption_value for t in buyers])
-            bids = sorted([t.cost for t in sellers], reverse=True)
+            # Generate and sort asks and bids
+            asks = sorted([t.generate_ask() for t in sellers])
+            bids = sorted([t.generate_bid() for t in buyers], reverse=True)
+
 
             # Find the maximum number of possible trades
             m = 0
