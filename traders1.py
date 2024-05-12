@@ -1,20 +1,21 @@
 import random
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 a_Buyer = 147 # A € [133,200]
 v_Seller = 14  # V € [0,67]
 
 class Trader:
-    def __init__(self, id,trader_type):
+    def __init__(self, id, trader_type, num_rounds = 6):
         self.id = id
         self.trader_type = trader_type
         # chaque vendeur dispose d'une unité de bien et chaque acheteur dispose de 0 unité
-        self.init_qty = 1 if trader_type == "seller" else None
+        self.init_qty = np.full(num_rounds, 2) if trader_type == "seller" else None
         self.redemption_value = (a_Buyer - 7*self.id) if trader_type == "buyer" else None
         self.cost = (v_Seller + 7*self.id) if trader_type == "seller" else None
-        self.sold_quantities = 0  if  trader_type == "seller" else None
-        self.bought_quantities = 0 if trader_type == "buyer" else None
+        self.sold_quantities = np.full(num_rounds, 0)  if  trader_type == "seller" else None
+        self.bought_quantities = np.full(num_rounds, 0) if trader_type == "buyer" else None
         self.has_traded = self.bought_quantities ==1 if trader_type == "buyer" else self.sold_quantities ==1
 
 def create_traders():
