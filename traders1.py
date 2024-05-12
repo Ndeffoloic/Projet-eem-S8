@@ -61,7 +61,7 @@ def determine_price(ask,bid,type_price_determined) :
     du type d'échanges que l'onsouhaite simuler
     """
     if type_price_determined == 1 :
-        return random.uniform.choice([ask,bid])
+        return random.choice([ask,bid])
     elif type_price_determined == 2 :
         return int(random.uniform(ask,bid))
     elif type_price_determined == 3 :
@@ -136,10 +136,11 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
                     # Update quantities and calculate individual gains
                     for buyer in buyers[:m]:
                         buyer.bought_quantities[i] = 1
+                        effective_profit += buyer.redemption_value - price
                     for seller in sellers[:m]:
                         seller.sold_quantities[i] = 1
-                    
-                    # Record demand and supply
+                        effective_profit += price - seller.cost
+                    max_profit += sum(buyer.redemption_value - seller.cost for buyer, seller in zip(buyers[:m], sellers[:m]))                    # Record demand and supply
                     demand.append(min(bids[:m]))
                     supply.append(max(asks[:m]))
                     # Record prices
@@ -188,5 +189,5 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
     plt.legend()
     plt.show()
     
-run_simulation(2,2,1)
+run_simulation(2,1,1)
 
