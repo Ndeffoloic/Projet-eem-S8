@@ -1,10 +1,21 @@
-    for i in range(20):  # Run for 20 rounds
-        buyers = [t for t in traders if t.trader_type ==  "buyer" and not t.has_traded]
-        sellers = [t for t in traders if t.trader_type ==  "seller" and not t.has_traded]
-        nmr_qty = 0 # nombre d'échanges au cours de ce round
-        if not buyers or not sellers:
-            break  # No more trades can be made
-        if type_double_auction == 1 : 
-            # Generate and sort asks and bids
-            asks = sorted([t.generate_ask() for t in sellers])
-            bids = sorted([t.generate_bid() for t in buyers], reverse=True)
+    import matplotlib.ticker as ticker
+
+    # ...
+    # Plot demand and supply
+    plt.figure(figsize=(10, 5))
+    plt.plot(range(len(demand)), sorted(demand, reverse=True), drawstyle='steps', label='Demand')
+    plt.plot(range(len(supply)), sorted(supply), drawstyle='steps', label='Supply')
+    plt.xlabel('Quantity')
+    plt.ylabel('Price')
+    plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))  # Ensure x-axis values are integers
+    plt.legend()
+    plt.show()
+
+    # Plot prices
+    plt.figure(figsize=(10, 5))
+    plt.plot(range(len(prices)), prices, label='Prices', marker='o')
+    plt.xlabel('Quantity')
+    plt.ylabel('Price')
+    plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))  # Ensure x-axis values are integers
+    plt.legend()
+    plt.show()
