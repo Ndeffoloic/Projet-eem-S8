@@ -136,11 +136,11 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
                     # Update quantities and calculate individual gains
                     for buyer in buyers[:m]:
                         buyer.bought_quantities[i] = 1
-                        effective_profit += buyer.redemption_value - price
+                        effective_profit += (buyer.redemption_value - price)*buyer.bought_quantities[i]
                     for seller in sellers[:m]:
                         seller.sold_quantities[i] = 1
-                        effective_profit += price - seller.cost
-                    max_profit += sum(buyer.redemption_value - seller.cost for buyer, seller in zip(buyers[:m], sellers[:m]))                    # Record demand and supply
+                        effective_profit += (price - seller.cost)*seller.sold_quantities[i]
+                    max_profit += sum(buyer.redemption_value - seller.cost for buyer, seller in zip(buyers[:m], sellers[:m]))*m                    # Record demand and supply
                     demand.append(min(bids[:m]))
                     supply.append(max(asks[:m]))
                     # Record prices
@@ -159,6 +159,8 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
                     print(f"Trade occurred: buyer value = {buyer.bid}, seller value = {seller.ask}, price = {price}")
                     buyer.bought_quantities[i] = 1
                     seller.sold_quantities[i] = 1
+                    effective_profit += (buyer.redemption_value - price)*buyer.bought_quantities[i] + (price - seller.cost)*seller.sold_quantities[i]
+                    max_profit += (buyer.redemption_value - seller.cost)*seller.init_qty[i]
                     # Record demand and supply
                     demand.append(buyer.bid)
                     supply.append(seller.ask)
