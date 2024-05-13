@@ -1,3 +1,4 @@
+import math
 import random
 
 import matplotlib.pyplot as plt
@@ -31,9 +32,9 @@ class Trader:
             bool: True si le trader a tradé au tour courant, False sinon
         """
         if self.trader_type == "buyer":
-            return np.any(self.bought_quantities ==1)
+            return self.bought_quantities[round] ==1
         elif self.trader_type == "seller":
-            return np.any(self.sold_quantities ==1)
+            return self.sold_quantities[round] ==1
         
 
 def create_traders():
@@ -131,16 +132,18 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
                 else:
                     # Trades occur, choose price as the average of the highest ask and lowest bid among the m trades
                     price = determine_price(max(asks[:m]), min(bids[:m]), type_price_determined)
-                    print(f"{m} trades occurred at price = {price}")
+                    print(f"{m} trades occurred at price = {price} with buyer's price = {min(bids[:m])} and seller price = {max(asks[:m])}")
+                    
                     
                     # Update quantities and calculate individual gains
                     for buyer in buyers[:m]:
                         buyer.bought_quantities[i] = 1
-                        effective_profit += (buyer.redemption_value - price)*buyer.bought_quantities[i]
+                        effective_profit += max(0, (buyer.redemption_value - price)*buyer.bought_quantities[i])
                     for seller in sellers[:m]:
                         seller.sold_quantities[i] = 1
-                        effective_profit += (price - seller.cost)*seller.sold_quantities[i]
-                    max_profit += sum(buyer.redemption_value - seller.cost for buyer, seller in zip(buyers[:m], sellers[:m]))*m                    # Record demand and supply
+                        effective_profit += max(0, (price - seller.cost)*seller.sold_quantities[i])
+                    print(effective_profit)
+                    max_profit += sum(abs(buyer.redemption_value - seller.cost) for buyer, seller in zip(buyers[:m], sellers[:m]))*m*sellers[0].init_qty(i)
                     demand.append(min(bids[:m]))
                     supply.append(max(asks[:m]))
                     # Record prices
@@ -160,18 +163,21 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
                     buyer.bought_quantities[i] = 1
                     seller.sold_quantities[i] = 1
                     effective_profit += (buyer.redemption_value - price)*buyer.bought_quantities[i] + (price - seller.cost)*seller.sold_quantities[i]
-                    max_profit += (buyer.redemption_value - seller.cost)*seller.init_qty[i]
+                    max_profit += abs(buyer.redemption_value - seller.cost)*seller.init_qty[i]
                     # Record demand and supply
                     demand.append(buyer.bid)
                     supply.append(seller.ask)
                     prices.append(price)
 
     # ...
-        # Calculez l'efficience allocative
-    allocative_efficiency = effective_profit / max_profit
+    # Calculez l'efficience allocative
+    if max_profit == 0:
+        print("No trades were made, allocative efficiency is undefined.")
+    else:
+        allocative_efficiency = effective_profit / max_profit
+        # Affichez l'efficience allocative
+        print(f"Allocative efficiency: {allocative_efficiency * 100}%")
 
-    # Affichez l'efficience allocative
-    print(f"Allocative efficiency: {allocative_efficiency * 100}%")
     # Plot demand and supply
     plt.figure(figsize=(10, 5))
     plt.plot(range(len(demand)), sorted(demand, reverse=True), drawstyle='steps', label='Demand')
@@ -191,5 +197,5 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
     plt.legend()
     plt.show()
     
-run_simulation(2,1,1)
+run_simulation(2,1,0)
 
