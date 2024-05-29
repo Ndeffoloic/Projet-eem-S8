@@ -14,7 +14,7 @@ class Trader:
         self.id = id
         self.trader_type = trader_type
         # chaque vendeur dispose d'une unité de bien et chaque acheteur dispose de 0 unité
-        self.init_qty = np.full(num_rounds, 1) if trader_type == "seller" else None
+        self.init_qty = np.full(num_rounds, 1) 
         self.redemption_value = (a_Buyer - 7*self.id) if trader_type == "buyer" else None
         self.cost = (v_Seller + 7*self.id) if trader_type == "seller" else None
         self.sold_quantities = np.full(num_rounds, 0)  if  trader_type == "seller" else None
@@ -143,7 +143,7 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
                         seller.sold_quantities[i] = 1
                         effective_profit += max(0, (price - seller.cost)*seller.sold_quantities[i])
                     print(effective_profit)
-                    max_profit += sum(abs(buyer.redemption_value - seller.cost) for buyer, seller in zip(buyers[:m], sellers[:m]))*m*sellers[0].init_qty(i)
+                    max_profit += sum(abs(buyer.redemption_value - seller.cost) for buyer, seller in zip(buyers[:m], sellers[:m]))*m*sellers[0].init_qty[i]
                     demand.append(min(bids[:m]))
                     supply.append(max(asks[:m]))
                     # Record prices
@@ -197,5 +197,5 @@ def run_simulation(type_double_auction, type_price_determined, ZI_C = False, cha
     plt.legend()
     plt.show()
     
-run_simulation(2,1,0)
+run_simulation(2,3,0)
 
