@@ -110,14 +110,15 @@ class Application(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
         self.title("Simulation")
-
         # Create left frame for parameters
         self.left_frame = tk.Frame(self)
-        self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=False)
-
-        # Create right frame for plots
+        self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        # Create right frame for the plot
         self.right_frame = tk.Frame(self)
         self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # Create an intermediate frame to hold the widgets
+        self.intermediate_frame = tk.Frame(self.left_frame)
+        self.intermediate_frame.pack(side=tk.TOP, expand=True)
 
         # Create parameter entries
         self.parameters = {
@@ -127,25 +128,24 @@ class Application(tk.Tk):
             "change_random": tk.StringVar()
         }
         for i, (name, var) in enumerate(self.parameters.items()):
-            tk.Label(self.left_frame, text=name).grid(row=i, column=0)
-            tk.Entry(self.left_frame, textvariable=var).grid(row=i, column=1)
+            tk.Label(self.intermediate_frame, text=name).grid(row=i, column=0)
+            tk.Entry(self.intermediate_frame, textvariable=var).grid(row=i, column=1)
 
         # Create run button
-        self.run_button = tk.Button(self.left_frame, text="Simuler", command=self.run_simulation)
-        self.run_button.grid(row=len(self.parameters), column=0, columnspan=2)
+        self.run_button = tk.Button(self.intermediate_frame, text="Simuler", command=self.run_simulation)
+        self.run_button.grid(row=len(self.parameters)+4, column=0, columnspan=2)
 
         # Create next button
-        self.next_button = tk.Button(self.left_frame, text="Next", command=self.next_plot)
-        self.next_button.grid(row=len(self.parameters) + 1, column=0, columnspan=2)
+        self.next_button = tk.Button(self.intermediate_frame, text="Next", command=self.next_plot)
+        self.next_button.grid(row=len(self.parameters) + 5, column=0, columnspan=2)
 
         # Create prev button
-        self.prev_button = tk.Button(self.left_frame, text="Prev", command=self.prev_plot)
-        self.prev_button.grid(row=len(self.parameters) + 2, column=0, columnspan=2)
+        self.prev_button = tk.Button(self.intermediate_frame, text="Prev", command=self.prev_plot)
+        self.prev_button.grid(row=len(self.parameters) + 6, column=0, columnspan=2)
 
         # Create end button
-        self.end_button = tk.Button(self.left_frame, text="End", command=self.close_window)
-        self.end_button.grid(row=len(self.parameters) + 3, column=0, columnspan=2)
-
+        self.end_button = tk.Button(self.intermediate_frame, text="End", command=self.close_window)
+        self.end_button.grid(row=len(self.parameters) + 7, column=0, columnspan=2)
         # Create plot area
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_frame)
@@ -254,11 +254,11 @@ class Application(tk.Tk):
         self.current_plot = 0  # Add this line to keep track of the current plot
 
     def next_plot(self):
-        self.current_plot += 1
+        self.current_plot =(self.current_plot + 1)%2
         self.update_plot()
 
     def prev_plot(self):
-        self.current_plot -= 1
+        self.current_plot =(self.current_plot - 1)%2
         self.update_plot()
 
     def update_plot(self):
