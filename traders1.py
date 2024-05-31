@@ -1,9 +1,12 @@
-import math
+
 import random
+import tkinter as tk
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 a_Buyer = 147 # A € [133,200]
 v_Seller = 14  # V € [0,67]
@@ -46,7 +49,7 @@ class Trader:
         
 
 def create_traders():
-    """Créé les traders qui vont participé à la imulation de marché 
+    """Créé les traders qui vont participer à la imulation de marché 
     Il doit y avoir autant de traders que de rounds. 
     
 
@@ -58,7 +61,7 @@ def create_traders():
     return buyers + sellers
 
 def determine_price(ask,bid,type_price_determined) :
-    """Cette fonction détermine le 
+    """Cette fonction détermine le prix déquilibre visé
     Args:
         ask (double): prix généré par le vendeur pour le tour
         bid (double): prix généré par l'acheteur pour le tour
@@ -75,16 +78,30 @@ def determine_price(ask,bid,type_price_determined) :
         return int(random.uniform(ask,bid))
     elif type_price_determined == 3 :
         return (ask + bid)/2
+    
 def initialise_ask(ZI_C, change_random, sellers,buyers,type_price_determined):
+    """Initialises les offres et les demandes que vont proposer les acheteurs 
+    et les vendeurs lors de la double enchère
+
+    Args:
+        ZI_C (int): type de trader considéré 
+        change_random (boolean): si vrai, on va utiliser la loi gaussienne et non 
+        la loi normale pour déterminer les ask et les bids. 
+        sellers ([]): contient tous les vendeurs de la simulation
+        buyers ([]): contient tous les acheteurs de la simulation
+        type_price_determined (int): indique la manière avec laquelle nous allons 
+        déterminer le prix moyen à considérer pour une génération des asks et des bids 
+        suivant une loi uniforme. 
+    """
     if change_random:
         if ZI_C :
             seller_costs = [seller.cost for seller in sellers]
             buyer_redemption_values = [buyer.redemption_value for buyer in buyers]
             mu = determine_price(sum(seller_costs)/len(seller_costs), sum(buyer_redemption_values)/len(buyer_redemption_values), type_price_determined)  # Mean
-            sigma = 30  # Standard deviation
+            sigma = default_rounds  # Standard deviation
         else :
             mu = 100  # Mean
-            sigma = 30  # Standard deviation
+            sigma = default_rounds  # Standard deviation
         for t in sellers:
             t.ask = random.gauss(mu, sigma)
             while t.ask < 0 or t.ask > 200:
@@ -94,7 +111,6 @@ def initialise_ask(ZI_C, change_random, sellers,buyers,type_price_determined):
             while t.bid < 0 or t.bid > 200:
                 t.bid = random.gauss(mu, sigma)
 
-            
     else :
         if ZI_C :
             for t in sellers:
@@ -107,17 +123,10 @@ def initialise_ask(ZI_C, change_random, sellers,buyers,type_price_determined):
             for t in buyers:
                 t.bid = random.uniform(0, 200)
     
-        
-import tkinter as tk
-
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-
-
 class Application(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
-        self.title("Simulation")
+        self.title("Simulation avec les ZI-Traders")
         # Create left frame for parameters
         self.left_frame = tk.Frame(self)
         self.left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -130,10 +139,10 @@ class Application(tk.Tk):
 
         # Create parameter entries
         self.parameters = {
-            "type_double_auction": tk.StringVar(),
-            "type_price_determined": tk.StringVar(),
-            "ZI_C": tk.StringVar(),
-            "change_random": tk.StringVar()
+            "Type de double enchère": tk.StringVar(),
+            "Méthode pour le prix d'équilibre": tk.StringVar(),
+            "ZI-Traders C(1) ou U(0)": tk.StringVar(),
+            "Random Gaussien(1) ou Uniforme(0)": tk.StringVar()
         }
         for i, (name, var) in enumerate(self.parameters.items()):
             tk.Label(self.intermediate_frame, text=name).grid(row=i, column=0)
@@ -144,15 +153,15 @@ class Application(tk.Tk):
         self.run_button.grid(row=len(self.parameters)+4, column=0, columnspan=2)
 
         # Create next button
-        self.next_button = tk.Button(self.intermediate_frame, text="Next", command=self.next_plot)
+        self.next_button = tk.Button(self.intermediate_frame, text="Graphique suivant", command=self.next_plot)
         self.next_button.grid(row=len(self.parameters) + 5, column=0, columnspan=2)
 
         # Create prev button
-        self.prev_button = tk.Button(self.intermediate_frame, text="Prev", command=self.prev_plot)
+        self.prev_button = tk.Button(self.intermediate_frame, text="Graphique précédent", command=self.prev_plot)
         self.prev_button.grid(row=len(self.parameters) + 6, column=0, columnspan=2)
 
         # Create end button
-        self.end_button = tk.Button(self.intermediate_frame, text="End", command=self.close_window)
+        self.end_button = tk.Button(self.intermediate_frame, text="Arrêter", command=self.close_window)
         self.end_button.grid(row=len(self.parameters) + 7, column=0, columnspan=2)
         # Create plot area
         self.fig = Figure(figsize=(5, 4), dpi=100)
@@ -168,10 +177,10 @@ class Application(tk.Tk):
         params = {name: var.get() for name, var in self.parameters.items()}
         
         # Convert parameters to appropriate types
-        type_double_auction = int(params["type_double_auction"])
-        type_price_determined = int(params["type_price_determined"])
-        ZI_C = params["ZI_C"].lower() == 'true'
-        change_random = params["change_random"].lower() == 'true'
+        type_double_auction = int(params["Type de double enchère"])
+        type_price_determined = int(params["Méthode pour le prix d'équilibre"])
+        ZI_C = params["ZI-Traders C(1) ou U(0)"].lower() == 'true'
+        change_random = params["Random Gaussien(1) ou Uniforme(0)"].lower() == 'true'
         
         traders = create_traders()
         random.shuffle(traders)
@@ -210,32 +219,30 @@ class Application(tk.Tk):
                         # Update quantities and calculate individual gains
                         for buyer in buyers[:m]:
                             buyer.bought_quantities[i] = 1
-                            effective_profit += max(0, (buyer.redemption_value - price)*buyer.bought_quantities[i])
+                            effective_profit += (buyer.redemption_value - price)*buyer.bought_quantities[i]
                         for seller in sellers[:m]:
                             seller.sold_quantities[i] = 1
-                            effective_profit += max(0, (price - seller.cost)*seller.sold_quantities[i])
+                            effective_profit += (price - seller.cost)*seller.sold_quantities[i]
                         print(effective_profit)
-                        max_profit += sum(abs(buyer.redemption_value - seller.cost) for buyer, seller in zip(buyers[:m], sellers[:m]))*m*sellers[0].init_qty[i]
+                        max_profit += sum((buyer.redemption_value - seller.cost) for buyer, seller in zip(buyers[:m], sellers[:m]))*m*sellers[0].init_qty[i]
                         self.demand.append(min(bids[:m]))
                         self.supply.append(max(asks[:m]))
                         # Record prices
                         self.prices.append(price)
 
                 if type_double_auction == 2 :
-                    buyer = max(buyers, key=lambda t: t.bid) # semande la plus grande 
-                    seller = min(sellers, key=lambda t: t.ask) #offre la plus petite.
+                    buyer = max(buyers, key=lambda t: t.bid) # offre la plus grande 
+                    seller = min(sellers, key=lambda t: t.ask) #demande la plus petite.
                     
                     if buyer.bid < seller.ask:
                         print("No trade occurred")
                     else:
-                        # Trade occurs, choose price randomly between buyer value and seller value
-                        
                         price = determine_price(seller.ask, buyer.bid, type_price_determined)
                         print(f"Trade occurred: buyer value = {buyer.bid}, seller value = {seller.ask}, price = {price}")
                         buyer.bought_quantities[i] = 1
                         seller.sold_quantities[i] = 1
                         effective_profit += (buyer.redemption_value - price)*buyer.bought_quantities[i] + (price - seller.cost)*seller.sold_quantities[i]
-                        max_profit += abs(buyer.redemption_value - seller.cost)*seller.init_qty[i]
+                        max_profit += (buyer.redemption_value - seller.cost)*seller.init_qty[i]
                         # Record demand and supply
                         self.demand.append(buyer.bid)
                         self.supply.append(seller.ask)
@@ -252,8 +259,14 @@ class Application(tk.Tk):
 
         self.fig.clear()
         ax = self.fig.add_subplot(111)
+        ax.set_xlabel('Round')
+        ax.set_ylabel('Price')
         ax.plot(range(len(self.demand)), sorted(self.demand, reverse=True), drawstyle='steps', label='Demand')
         ax.plot(range(len(self.supply)), sorted(self.supply), drawstyle='steps', label='Supply')
+        #ax.plot(range(len(self.demand)), drawstyle='steps', label='Demand',marker='o')
+        #ax.plot(range(len(self.supply)), drawstyle='steps', label='Supply')
+        
+        ax.legend()
         self.canvas.draw()
 
         # Update text area
@@ -274,15 +287,16 @@ class Application(tk.Tk):
         ax = self.fig.add_subplot(111)
         ax.set_xlabel('Round')
         ax.set_ylabel('Price')
+        ax.legend()
         if self.current_plot == 0:
 
-        #     ax.plot(range(len(self.demand)), sorted(self.demand, reverse=True), drawstyle='steps', label='Demand')
-        #     ax.plot(range(len(self.supply)), sorted(self.supply), drawstyle='steps', label='Supply')
-            ax.plot(range(len(self.demand)), drawstyle='steps', label='Demand')
-            ax.plot(range(len(self.supply)), drawstyle='steps', label='Supply')
+            ax.plot(range(len(self.demand)), sorted(self.demand, reverse=True), drawstyle='steps', label='Demand')
+            ax.plot(range(len(self.supply)), sorted(self.supply), drawstyle='steps', label='Supply')
+            # ax.plot(range(len(self.demand)), drawstyle='steps', label='Demand',marker='o')
+            # ax.plot(range(len(self.supply)), drawstyle='steps', label='Supply')
+            
         elif self.current_plot == 1:
             ax.plot(range(len(self.prices)), self.prices, label='Prices', marker='o')
-            ax.legend()
         ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))  # Ensure x-axis values are integers
 
         self.canvas.draw()
