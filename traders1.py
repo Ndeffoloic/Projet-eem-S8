@@ -10,11 +10,19 @@ v_Seller = 14  # V € [0,67]
 default_rounds = 20 
 
 class Trader:
+
     def __init__(self, id, trader_type, num_rounds = default_rounds):
+        """Représente les traders automatiques à intélligence zéro
+
+        Args:
+            id (int): chaque trader de l"expérience sera identifié par un numéro unique
+            trader_type (String): définit si le trader a ou non une contrainte budgétaire
+            num_rounds (int, optional): indique le nombre de tours pendant lesquels va se faire la simulation.
+        """
         self.id = id
         self.trader_type = trader_type
         # chaque vendeur dispose d'une unité de bien et chaque acheteur dispose de 0 unité
-        self.init_qty = np.full(num_rounds, 1) 
+        self.init_qty = np.full(num_rounds, 1) if trader_type == "seller" else np.full(num_rounds, 0) 
         self.redemption_value = (a_Buyer - 7*self.id) if trader_type == "buyer" else None
         self.cost = (v_Seller + 7*self.id) if trader_type == "seller" else None
         self.sold_quantities = np.full(num_rounds, 0)  if  trader_type == "seller" else None
@@ -32,9 +40,9 @@ class Trader:
             bool: True si le trader a tradé au tour courant, False sinon
         """
         if self.trader_type == "buyer":
-            return self.bought_quantities[round] ==1
+            return self.bought_quantities[round] >=1
         elif self.trader_type == "seller":
-            return self.sold_quantities[round] ==1
+            return self.sold_quantities[round] >=1
         
 
 def create_traders():
@@ -264,15 +272,19 @@ class Application(tk.Tk):
     def update_plot(self):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
+        ax.set_xlabel('Round')
+        ax.set_ylabel('Price')
         if self.current_plot == 0:
-            ax.plot(range(len(self.demand)), sorted(self.demand, reverse=True), drawstyle='steps', label='Demand')
-            ax.plot(range(len(self.supply)), sorted(self.supply), drawstyle='steps', label='Supply')
+
+        #     ax.plot(range(len(self.demand)), sorted(self.demand, reverse=True), drawstyle='steps', label='Demand')
+        #     ax.plot(range(len(self.supply)), sorted(self.supply), drawstyle='steps', label='Supply')
+            ax.plot(range(len(self.demand)), drawstyle='steps', label='Demand')
+            ax.plot(range(len(self.supply)), drawstyle='steps', label='Supply')
         elif self.current_plot == 1:
             ax.plot(range(len(self.prices)), self.prices, label='Prices', marker='o')
-            ax.set_xlabel('Quantity')
-            ax.set_ylabel('Price')
-            ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))  # Ensure x-axis values are integers
             ax.legend()
+        ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))  # Ensure x-axis values are integers
+
         self.canvas.draw()
     def close_window(self):
         self.destroy()
