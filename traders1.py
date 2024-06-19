@@ -248,7 +248,6 @@ class Application(tk.Tk):
                         self.supply.append(seller.ask)
                         self.prices.append(price)
 
-        # ...
         # Calculez l'efficience allocative
         if max_profit == 0:
             print("No trades were made, allocative efficiency is undefined.")
@@ -265,7 +264,6 @@ class Application(tk.Tk):
         ax.plot(range(len(self.supply)), sorted(self.supply), drawstyle='steps', label='Supply')
         #ax.plot(range(len(self.demand)), drawstyle='steps', label='Demand',marker='o')
         #ax.plot(range(len(self.supply)), drawstyle='steps', label='Supply')
-        
         ax.legend()
         self.canvas.draw()
 
